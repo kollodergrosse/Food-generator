@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Essensplan-App</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header class="app-header">
+    <button id="menu-toggle" class="hamburger" aria-label="Menü öffnen" aria-expanded="false">☰</button>
+    <div class="header-titel">
+      <h1>🍽️ Essensplan-App</h1>
+      <p class="subtitle">Dein persönlicher Wochenplan – KI-generiert nach Vorlieben und Wetter</p>
+    </div>
+  </header>
+
+  <div class="aktion-leiste">
+    <button id="erstellen-btn" class="btn btn-primary">✨ Essensplan erstellen</button>
+    <span id="erstellen-status" class="status"></span>
+  </div>
+
+  <nav id="side-nav" class="side-nav" aria-label="Hauptnavigation">
+    <button id="nav-close" class="nav-close" aria-label="Menü schließen">✕</button>
+    <ul>
+      <li><button class="nav-link active" data-view="nutzerprofil">👤 Haushalt</button></li>
+      <li><button class="nav-link" data-view="wochenplan">📅 Wochenplan</button></li>
+      <li><button class="nav-link" data-view="einkaufsliste">🛒 Einkaufsliste</button></li>
+      <li><button class="nav-link" data-view="rezepte">📖 Rezepte</button></li>
+    </ul>
+  </nav>
+  <div id="nav-overlay" class="nav-overlay"></div>
+
+  <main class="layout">
+    <section id="view-nutzerprofil" class="view card">
+      <h2>Haushalt</h2>
+      <form id="haushalt-form">
+        <label>Ort <span class="hint">(für Wetterdaten, gilt für den ganzen Haushalt)</span>
+          <div class="ort-zeile">
+            <input type="text" name="ort" value="{{ haushalt.ort }}" required>
+            <button type="button" id="ort-erkennen-btn" class="btn btn-secondary">📍 Automatisch erkennen</button>
+          </div>
+          <span id="ort-status" class="status"></span>
+        </label>
+
+        <div id="profil-liste" class="profil-liste"></div>
+
+        <button type="button" id="profil-hinzufuegen-btn" class="btn btn-secondary">+ Person hinzufügen</button>
+        <button type="submit" class="btn btn-secondary">Haushalt speichern</button>
+        <span id="profil-status" class="status"></span>
+      </form>
+    </section>
+
+    <template id="profil-karte-vorlage">
+      <div class="profil-karte">
+        <button type="button" class="profil-entfernen-btn" aria-label="Person entfernen">✕</button>
+        <label>Name
+          <input type="text" class="profil-name" required>
+        </label>
+        <label>Abneigungen <span class="hint">(Lebensmittel, die diese Person nicht gerne isst, kommagetrennt)</span>
+          <input type="text" class="profil-abneigungen">
+        </label>
+        <label>Allergien <span class="hint">(kommagetrennt)</span>
+          <input type="text" class="profil-allergien">
+        </label>
+        <label>Diätform
+          <select class="profil-diaetform">
+            {% for option in ['keine', 'vegetarisch', 'vegan', 'pescetarisch', 'keto', 'low-carb'] %}
+            <option value="{{ option }}">{{ option }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <div class="feld-gruppe">
+          <span class="feld-label">Mahlzeiten <span class="hint">(an welchen diese Person teilnimmt)</span></span>
+          <div class="mahlzeiten-zeile">
+            {% for mahlzeit in ['Frühstück', 'Mittag', 'Abend'] %}
+            <label class="mahlzeit-checkbox">
+              <input type="checkbox" class="profil-mahlzeit" value="{{ mahlzeit }}" checked> {{ mahlzeit }}
+            </label>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <section id="view-wochenplan" class="view card" hidden>
+      <h2>Wochenplan</h2>
+      <div id="wochenplan-grid" class="wochenplan-grid"></div>
+    </section>
+
+    <section id="view-einkaufsliste" class="view card" hidden>
+      <h2>Einkaufsliste</h2>
+      <ul id="einkaufsliste" class="einkaufsliste"></ul>
+    </section>
+
+    <section id="view-rezepte" class="view card" hidden>
+      <h2>Rezepte</h2>
+      <div id="rezepte-liste" class="rezepte-liste"></div>
+    </section>
+  </main>
+
+  <script>
+    window.INITIAL_PLAN = {{ plan | tojson }};
+    window.INITIAL_HAUSHALT = {{ haushalt | tojson }};
+  </script>
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
