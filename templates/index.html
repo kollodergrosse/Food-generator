@@ -7,32 +7,90 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
+  <div class="blob-layer" aria-hidden="true">
+    <div class="blob blob-cyan" data-speed="0.12"></div>
+    <div class="blob blob-violet" data-speed="0.22"></div>
+    <div class="blob blob-pink" data-speed="0.3"></div>
+  </div>
+  <div id="sprechblasen-layer" class="sprechblasen-layer" aria-hidden="true"></div>
+  {% set wochentage = [('Montag', 'Mo'), ('Dienstag', 'Di'), ('Mittwoch', 'Mi'), ('Donnerstag', 'Do'), ('Freitag', 'Fr'), ('Samstag', 'Sa'), ('Sonntag', 'So')] %}
+  {% set diaetformen = ['keine', 'vegetarisch', 'vegan', 'pescetarisch', 'keto', 'low-carb'] %}
+  {% set mahlzeiten = ['Frühstück', 'Mittag', 'Abend'] %}
+
+  {% macro diaetform_optionen() %}
+    {% for option in diaetformen %}
+    <option value="{{ option }}">{{ option }}</option>
+    {% endfor %}
+  {% endmacro %}
+
+  {% macro mahlzeiten_tabelle(checkbox_class) %}
+    <div class="mahlzeiten-tabelle-wrapper">
+      <table class="mahlzeiten-tabelle">
+        <thead>
+          <tr>
+            <th></th>
+            {% for tag, kurz in wochentage %}<th>{{ kurz }}</th>{% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for mahlzeit in mahlzeiten %}
+          <tr>
+            <th>{{ mahlzeit }}</th>
+            {% for tag, kurz in wochentage %}
+            <td><input type="checkbox" class="{{ checkbox_class }}" data-tag="{{ tag }}" data-mahlzeit="{{ mahlzeit }}" checked></td>
+            {% endfor %}
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% endmacro %}
   <header class="app-header">
-    <button id="menu-toggle" class="hamburger" aria-label="Menü öffnen" aria-expanded="false">☰</button>
     <div class="header-titel">
       <h1>🍽️ Essensplan-App</h1>
       <p class="subtitle">Dein persönlicher Wochenplan – KI-generiert nach Vorlieben und Wetter</p>
     </div>
   </header>
 
-  <div class="aktion-leiste">
+  <div class="aktion-leiste" hidden>
     <button id="erstellen-btn" class="btn btn-primary">✨ Essensplan erstellen</button>
     <span id="erstellen-status" class="status"></span>
   </div>
 
-  <nav id="side-nav" class="side-nav" aria-label="Hauptnavigation">
-    <button id="nav-close" class="nav-close" aria-label="Menü schließen">✕</button>
-    <ul>
-      <li><button class="nav-link active" data-view="nutzerprofil">👤 Haushalt</button></li>
-      <li><button class="nav-link" data-view="wochenplan">📅 Wochenplan</button></li>
-      <li><button class="nav-link" data-view="einkaufsliste">🛒 Einkaufsliste</button></li>
-      <li><button class="nav-link" data-view="rezepte">📖 Rezepte</button></li>
-    </ul>
-  </nav>
-  <div id="nav-overlay" class="nav-overlay"></div>
+  <div id="tag-modal-overlay" class="tag-modal-overlay"></div>
+  <div id="tag-modal" class="tag-modal" role="dialog" aria-modal="true" aria-labelledby="tag-modal-titel">
+    <button type="button" id="tag-modal-close" class="tag-modal-close" aria-label="Schließen">✕</button>
+    <div id="tag-modal-body" class="tag-modal-body"></div>
+  </div>
 
   <main class="layout">
-    <section id="view-nutzerprofil" class="view card">
+    <section id="view-start" class="view start-view">
+      <div class="start-grid">
+        <button type="button" class="start-kachel" data-view="nutzerprofil">
+          <span class="start-kachel-icon">👤</span>
+          <span class="start-kachel-titel">Haushalt</span>
+          <span class="start-kachel-text">Personen, Vorlieben und Ort verwalten</span>
+        </button>
+        <button type="button" class="start-kachel" data-view="wochenplan">
+          <span class="start-kachel-icon">📅</span>
+          <span class="start-kachel-titel">Wochenplan</span>
+          <span class="start-kachel-text">Deine Woche auf einen Blick</span>
+        </button>
+        <button type="button" class="start-kachel" data-view="einkaufsliste">
+          <span class="start-kachel-icon">🛒</span>
+          <span class="start-kachel-titel">Einkaufsliste</span>
+          <span class="start-kachel-text">Was noch besorgt werden muss</span>
+        </button>
+        <button type="button" class="start-kachel" data-view="eigene-rezepte">
+          <span class="start-kachel-icon">🍳</span>
+          <span class="start-kachel-titel">Gerichte-Datenbank</span>
+          <span class="start-kachel-text">Eigene Gerichte anlegen und verwalten</span>
+        </button>
+      </div>
+    </section>
+
+    <section id="view-nutzerprofil" class="view card" hidden>
+      <button type="button" class="zurueck-btn" data-view="start">← Menüauswahl</button>
       <h2>Haushalt</h2>
       <form id="haushalt-form">
         <label>Ort <span class="hint">(für Wetterdaten, gilt für den ganzen Haushalt)</span>
@@ -46,6 +104,11 @@
         <div id="profil-liste" class="profil-liste"></div>
 
         <button type="button" id="profil-hinzufuegen-btn" class="btn btn-secondary">+ Person hinzufügen</button>
+
+        <h3>Besucher <span class="hint">(zeitlich begrenzte Gäste, z.B. übers Wochenende)</span></h3>
+        <div id="besucher-liste" class="profil-liste"></div>
+        <button type="button" id="besucher-hinzufuegen-btn" class="btn btn-secondary">+ Besucher hinzufügen</button>
+
         <button type="submit" class="btn btn-secondary">Haushalt speichern</button>
         <span id="profil-status" class="status"></span>
       </form>
@@ -57,51 +120,152 @@
         <label>Name
           <input type="text" class="profil-name" required>
         </label>
-        <label>Abneigungen <span class="hint">(Lebensmittel, die diese Person nicht gerne isst, kommagetrennt)</span>
-          <input type="text" class="profil-abneigungen">
+        <label>Vorlieben
+          <input type="text" class="profil-vorlieben" placeholder="z.B. scharf, asiatisch">
         </label>
-        <label>Allergien <span class="hint">(kommagetrennt)</span>
-          <input type="text" class="profil-allergien">
+        <label>Abneigungen
+          <input type="text" class="profil-abneigungen" placeholder="z.B. Pilze, Rosenkohl">
+        </label>
+        <label>Allergien
+          <input type="text" class="profil-allergien" placeholder="z.B. Nüsse, Laktose">
         </label>
         <label>Diätform
           <select class="profil-diaetform">
-            {% for option in ['keine', 'vegetarisch', 'vegan', 'pescetarisch', 'keto', 'low-carb'] %}
-            <option value="{{ option }}">{{ option }}</option>
-            {% endfor %}
+            {{ diaetform_optionen() }}
           </select>
         </label>
         <div class="feld-gruppe">
-          <span class="feld-label">Mahlzeiten <span class="hint">(an welchen diese Person teilnimmt)</span></span>
-          <div class="mahlzeiten-zeile">
-            {% for mahlzeit in ['Frühstück', 'Mittag', 'Abend'] %}
-            <label class="mahlzeit-checkbox">
-              <input type="checkbox" class="profil-mahlzeit" value="{{ mahlzeit }}" checked> {{ mahlzeit }}
-            </label>
-            {% endfor %}
-          </div>
+          <span class="feld-label">Mahlzeiten <span class="hint">(an welchen Tagen und Mahlzeiten diese Person teilnimmt)</span></span>
+          {{ mahlzeiten_tabelle('profil-mahlzeit-tag') }}
+        </div>
+      </div>
+    </template>
+
+    <template id="besucher-karte-vorlage">
+      <div class="profil-karte">
+        <button type="button" class="profil-entfernen-btn" aria-label="Besucher entfernen">✕</button>
+        <label>Name
+          <input type="text" class="besucher-name" required>
+        </label>
+        <div class="feld-gruppe-zeile">
+          <label>Von
+            <input type="date" class="besucher-von" required>
+          </label>
+          <label>Bis
+            <input type="date" class="besucher-bis" required>
+          </label>
+        </div>
+        <label>Unverträglichkeiten
+          <input type="text" class="besucher-unvertraeglichkeiten" placeholder="z.B. Laktose, Gluten">
+        </label>
+        <label>Ernährungsform
+          <select class="besucher-diaetform">
+            {{ diaetform_optionen() }}
+          </select>
+        </label>
+        <div class="feld-gruppe">
+          <span class="feld-label">Mahlzeiten <span class="hint">(an welchen Tagen und Mahlzeiten dieser Besucher teilnimmt)</span></span>
+          {{ mahlzeiten_tabelle('besucher-mahlzeit-tag') }}
         </div>
       </div>
     </template>
 
     <section id="view-wochenplan" class="view card" hidden>
+      <button type="button" class="zurueck-btn" data-view="start">← Menüauswahl</button>
       <h2>Wochenplan</h2>
+      <p class="hint">Auf einen Tag klicken, um die Rezepte mit Zutaten, Zubereitung und Nährwerten in einer Detailansicht zu öffnen.</p>
       <div id="wochenplan-grid" class="wochenplan-grid"></div>
     </section>
 
     <section id="view-einkaufsliste" class="view card" hidden>
+      <button type="button" class="zurueck-btn" data-view="start">← Menüauswahl</button>
       <h2>Einkaufsliste</h2>
+      <form id="einkaufsliste-hinzufuegen-form" class="einkaufsliste-hinzufuegen">
+        <input type="text" class="einkaufsliste-neu-menge" placeholder="Menge">
+        <input type="text" class="einkaufsliste-neu-einheit" placeholder="Einheit">
+        <input type="text" class="einkaufsliste-neu-name" placeholder="Artikel" required>
+        <button type="submit" class="btn btn-secondary btn-klein">+ Hinzufügen</button>
+      </form>
       <ul id="einkaufsliste" class="einkaufsliste"></ul>
     </section>
 
-    <section id="view-rezepte" class="view card" hidden>
-      <h2>Rezepte</h2>
-      <div id="rezepte-liste" class="rezepte-liste"></div>
+    <section id="view-eigene-rezepte" class="view card" hidden>
+      <button type="button" class="zurueck-btn" data-view="start">← Menüauswahl</button>
+      <h2>Gerichte-Datenbank</h2>
+      <p class="hint">Die KI wählt beim Erstellen des Wochenplans ausschließlich aus diesen Gerichten aus - passend zum Wetter, zur Mahlzeit und zu den Vorlieben/Einschränkungen des Haushalts.</p>
+
+      <form id="eigenes-rezept-form">
+        <label>Name
+          <input type="text" name="rezept_name" required>
+        </label>
+        <label>Portionen
+          <input type="number" name="portionen" value="1" min="1" required>
+        </label>
+
+        <div class="feld-gruppe">
+          <span class="feld-label">Mahlzeiten <span class="hint">(für welche dieses Gericht geeignet ist)</span></span>
+          <div class="mahlzeiten-zeile">
+            {% for mahlzeit in mahlzeiten %}
+            <label class="mahlzeit-checkbox">
+              <input type="checkbox" class="eigenes-rezept-mahlzeit" value="{{ mahlzeit }}"> {{ mahlzeit }}
+            </label>
+            {% endfor %}
+          </div>
+        </div>
+
+        <label>YouTube-Link <span class="hint">(optional, z.B. ein Zubereitungsvideo)</span>
+          <input type="url" name="youtube_link" placeholder="https://www.youtube.com/watch?v=...">
+        </label>
+
+        <label>Tags <span class="hint">(kommagetrennt, z.B. scharf, mediterran, vegetarisch)</span>
+          <input type="text" name="tags" placeholder="z.B. scharf, mediterran">
+        </label>
+
+        <div class="feld-gruppe">
+          <span class="feld-label">Zutaten</span>
+          <div id="eigenes-rezept-zutaten" class="eigenes-rezept-zutaten"></div>
+          <button type="button" id="zutat-hinzufuegen-btn" class="btn btn-secondary btn-klein">+ Zutat</button>
+        </div>
+
+        <div class="feld-gruppe">
+          <span class="feld-label">Zubereitung <span class="hint">(ein Schritt pro Zeile)</span></span>
+          <div id="eigenes-rezept-schritte" class="eigenes-rezept-schritte"></div>
+          <button type="button" id="schritt-hinzufuegen-btn" class="btn btn-secondary btn-klein">+ Schritt</button>
+        </div>
+
+        <p class="hint">Die Nährwerte werden beim Speichern automatisch anhand der Zutatenmengen geschätzt
+          (ca.-Richtwerte, keine exakte Nährwertberechnung).</p>
+
+        <input type="hidden" name="rezept_id">
+        <button type="submit" class="btn btn-primary">Gericht speichern</button>
+        <button type="button" id="eigenes-rezept-abbrechen-btn" class="btn btn-secondary" hidden>Bearbeitung abbrechen</button>
+        <span id="eigenes-rezept-status" class="status"></span>
+      </form>
+
+      <div id="eigene-rezepte-liste" class="rezepte-liste"></div>
     </section>
   </main>
+
+  <template id="zutat-zeile-vorlage">
+    <div class="zutat-zeile">
+      <input type="text" class="zutat-menge" placeholder="Menge">
+      <input type="text" class="zutat-einheit" placeholder="Einheit">
+      <input type="text" class="zutat-name" placeholder="Zutat">
+      <button type="button" class="zeile-entfernen-btn" aria-label="Zutat entfernen">✕</button>
+    </div>
+  </template>
+
+  <template id="schritt-zeile-vorlage">
+    <div class="schritt-zeile">
+      <input type="text" class="schritt-text" placeholder="Zubereitungsschritt">
+      <button type="button" class="zeile-entfernen-btn" aria-label="Schritt entfernen">✕</button>
+    </div>
+  </template>
 
   <script>
     window.INITIAL_PLAN = {{ plan | tojson }};
     window.INITIAL_HAUSHALT = {{ haushalt | tojson }};
+    window.INITIAL_EIGENE_REZEPTE = {{ eigene_rezepte | tojson }};
   </script>
   <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>

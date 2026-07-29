@@ -1,15 +1,52 @@
 :root {
-  --color-bg: #f7f5f0;
-  --color-card: #ffffff;
-  --color-input: #0f9d76;
-  --color-input-bg: #e6f7f1;
-  --color-ai: #b5502c;
-  --color-ai-bg: #fbeee7;
-  --color-text: #2d2a26;
-  --color-text-muted: #6b6558;
-  --color-border: #e5e1d8;
-  --radius: 14px;
-  --shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  --color-bg: #0d1117;
+  --color-bg-elevated: #11151c;
+  --color-card: #161b22;
+  --color-card-hover: #1b2129;
+  --color-input: #22d3ee;
+  --color-input-bg: rgba(34, 211, 238, 0.12);
+  --color-ai: #a78bfa;
+  --color-ai-bg: rgba(167, 139, 250, 0.12);
+  --color-accent-grad: linear-gradient(135deg, #8b5cf6, #6366f1);
+  --color-accent-grad-drift: linear-gradient(120deg, #8b5cf6, #6366f1, #f472b6, #8b5cf6);
+  --color-text: #e6e8eb;
+  --color-text-muted: #8b94a3;
+  --color-border: #242a34;
+  --radius: 16px;
+  --shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
+  --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.35);
+  --shadow-glow: 0 6px 20px rgba(99, 102, 241, 0.35), 0 0 16px rgba(34, 211, 238, 0.2);
+  --glow-cyan: 0 0 10px rgba(34, 211, 238, 0.35);
+  --glow-violet: 0 0 12px rgba(167, 139, 250, 0.35);
+  --color-input-border: rgba(34, 211, 238, 0.25);
+  --color-border-hover: #333b48;
+  --icon-btn-hover-bg: rgba(255, 255, 255, 0.08);
+  --grid-menge-einheit-name: 4.5rem 4.5rem 1fr auto;
+
+  /* Typografie-Skala: 5 Stufen statt der zuvor gewachsenen 11 leicht unterschiedlichen
+     Schriftgrößen - jede Textstelle in der App bezieht ihre Größe aus einer dieser Stufen. */
+  --text-xs: 0.75rem;
+  --text-sm: 0.85rem;
+  --text-base: 0.9rem;
+  --text-lg: 1.1rem;
+  --text-xl: 1.7rem;
+
+  /* Abstands-Skala (4px-Raster bei 16px Root-Schriftgröße): jeder margin/padding/gap-Wert in
+     dieser Datei ist einer dieser Stufen zugeordnet statt einem eigenen, historisch gewachsenen
+     Wert - macht Abstände über die ganze App hinweg konsistent statt beliebig. */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-7: 1.75rem;
+  --space-8: 2rem;
+  --space-12: 3rem;
+
+  /* Gemeinsames Padding aller kleinen Icon-Buttons (Schließen, Entfernen, Bearbeiten) - macht sie
+     zu einem einheitlichen Muster statt 4 leicht unterschiedlicher Größen. */
+  --icon-btn-padding: var(--space-1) var(--space-2);
 }
 
 * { box-sizing: border-box; }
@@ -21,159 +58,223 @@ body {
   color: var(--color-text);
 }
 
+/* Fixed glow layer behind everything: three blurred neon blobs that drift upward at different
+   speeds as the page is scrolled (see script.js), creating a subtle parallax depth effect. */
+.blob-layer {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  opacity: 0.5;
+  will-change: transform;
+}
+
+.blob-cyan {
+  top: -10%;
+  right: -8%;
+  width: 46vw;
+  height: 46vw;
+  background: radial-gradient(circle, rgba(34, 211, 238, 0.55), transparent 70%);
+}
+
+.blob-violet {
+  top: 30%;
+  left: -12%;
+  width: 52vw;
+  height: 52vw;
+  background: radial-gradient(circle, rgba(167, 139, 250, 0.5), transparent 70%);
+}
+
+.blob-pink {
+  top: 75%;
+  right: -10%;
+  width: 40vw;
+  height: 40vw;
+  background: radial-gradient(circle, rgba(244, 114, 182, 0.4), transparent 70%);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: #2b3240;
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover { background: #384152; }
+
 .app-header {
   display: flex;
   align-items: flex-start;
-  gap: 1rem;
+  gap: var(--space-4);
   max-width: 900px;
   margin: 0 auto;
-  padding: 1.75rem 1.5rem 1rem;
+  padding: var(--space-7) var(--space-6) var(--space-4);
 }
 
-.hamburger {
-  background: none;
-  border: none;
-  font-size: 1.6rem;
-  line-height: 1;
-  cursor: pointer;
-  color: var(--color-text);
-  padding: 0.2rem 0.5rem;
-  border-radius: 8px;
+.header-titel h1 {
+  margin: 0;
+  font-size: var(--text-xl);
+  display: inline-block;
+  background: linear-gradient(135deg, #e6e8eb, #9aa4b2);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
-
-.hamburger:hover { background: var(--color-input-bg); }
-
-.header-titel h1 { margin: 0; font-size: 1.7rem; }
-.header-titel .subtitle { margin: 0.3rem 0 0; color: var(--color-text-muted); }
+.header-titel h1::after {
+  content: "";
+  display: block;
+  width: 2.5rem;
+  height: 3px;
+  margin-top: var(--space-2);
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--color-input), var(--color-ai));
+  box-shadow: var(--glow-cyan);
+}
+.header-titel .subtitle { margin: var(--space-1) 0 0; color: var(--color-text-muted); }
 
 .aktion-leiste {
   max-width: 900px;
-  margin: 0 auto 1.5rem;
-  padding: 0 1.5rem;
+  margin: 0 auto var(--space-6);
+  padding: 0 var(--space-6);
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: var(--space-4);
   flex-wrap: wrap;
 }
+
+.aktion-leiste[hidden] { display: none; }
 
 .aktion-leiste .btn-primary { width: auto; margin-top: 0; }
 .aktion-leiste .status { margin-top: 0; }
 
-/* Ausklappbares Seitenmenü */
-.side-nav {
-  position: fixed;
-  top: 0;
-  left: 0;
-  height: 100vh;
-  width: 260px;
-  background: var(--color-card);
-  box-shadow: var(--shadow);
-  padding: 1.5rem;
-  transform: translateX(-100%);
-  transition: transform 0.25s ease;
-  z-index: 110;
-}
-
-.side-nav.open { transform: translateX(0); }
-
-.nav-close {
-  position: absolute;
-  top: 1.2rem;
-  right: 1.2rem;
-  background: none;
-  border: none;
-  font-size: 1.3rem;
-  cursor: pointer;
-  color: var(--color-text-muted);
-}
-
-.side-nav ul {
-  list-style: none;
-  margin: 2.5rem 0 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-}
-
-.nav-link {
-  display: block;
-  width: 100%;
-  text-align: left;
-  background: none;
-  border: none;
-  padding: 0.75rem 1rem;
-  border-radius: 8px;
-  font-size: 1rem;
+.zurueck-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-bottom: var(--space-4);
+  background: var(--color-input-bg);
+  border: 1px solid var(--color-input-border);
+  border-radius: 999px;
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--text-sm);
   font-weight: 600;
-  color: var(--color-text);
+  color: var(--color-input);
   cursor: pointer;
   font-family: inherit;
+  transition: background 0.15s ease, transform 0.15s ease;
 }
 
-.nav-link:hover,
-.nav-link.active {
-  background: var(--color-input-bg);
-  color: var(--color-input);
-}
-
-.nav-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.35);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.25s ease;
-  z-index: 100;
-}
-
-.nav-overlay.visible {
-  opacity: 1;
-  pointer-events: auto;
-}
+.zurueck-btn:hover { background: rgba(34, 211, 238, 0.2); transform: translateX(-2px); }
 
 .layout {
   max-width: 900px;
-  margin: 0 auto 3rem;
-  padding: 0 1.5rem;
+  margin: 0 auto var(--space-12);
+  padding: 0 var(--space-6);
 }
 
 .card {
   background: var(--color-card);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
-  padding: 1.5rem;
+  padding: var(--space-6);
 }
 
-.card h2 { margin-top: 0; font-size: 1.15rem; }
+.card h2 { margin-top: 0; font-size: var(--text-lg); }
+
+/* Startseite: großes Kachel-Grid als Einstieg in die vier Bereiche der App. */
+.start-view { padding-top: var(--space-2); }
+
+.start-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-5);
+}
+
+@media (max-width: 560px) {
+  .start-grid { grid-template-columns: 1fr; }
+}
+
+.start-kachel {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: var(--space-7) var(--space-6);
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+  color: var(--color-text);
+  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.start-kachel:hover {
+  transform: translateY(-3px);
+  border-color: var(--color-border-hover);
+}
+
+.start-kachel:focus-visible {
+  outline: none;
+  border-color: var(--color-input);
+  box-shadow: var(--glow-cyan);
+}
+
+.start-kachel-icon { font-size: 1.9rem; }
+
+.start-kachel-titel {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.start-kachel-text {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
 
 form label {
   display: block;
-  margin-bottom: 1rem;
-  font-size: 0.9rem;
+  margin-bottom: var(--space-4);
+  font-size: var(--text-base);
   font-weight: 600;
 }
 
-.hint { font-weight: 400; color: var(--color-text-muted); font-size: 0.8rem; }
+.hint { font-weight: 400; color: var(--color-text-muted); font-size: var(--text-xs); }
 
 form input, form select {
   width: 100%;
-  margin-top: 0.35rem;
-  padding: 0.55rem 0.7rem;
+  margin-top: var(--space-1);
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-bg-elevated);
   border: 1px solid var(--color-border);
-  border-radius: 8px;
-  font-size: 0.95rem;
+  border-radius: 10px;
+  font-size: var(--text-base);
   font-family: inherit;
+  color: var(--color-text);
 }
+
+form input::placeholder { color: var(--color-text-muted); }
 
 form input:focus, form select:focus {
   outline: none;
   border-color: var(--color-input);
+  box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.15);
 }
 
 .ort-zeile {
   display: flex;
-  gap: 0.5rem;
+  gap: var(--space-2);
   align-items: center;
 }
 
@@ -182,190 +283,471 @@ form input:focus, form select:focus {
 .ort-zeile .btn {
   margin-top: 0;
   white-space: nowrap;
-  padding: 0.55rem 0.9rem;
-  font-size: 0.85rem;
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--text-sm);
 }
 
 .btn {
   border: none;
-  border-radius: 8px;
-  padding: 0.7rem 1.2rem;
-  font-size: 0.95rem;
+  border-radius: 10px;
+  padding: var(--space-3) var(--space-5);
+  font-size: var(--text-base);
   font-weight: 600;
   cursor: pointer;
-  transition: opacity 0.15s ease;
+  transition: opacity 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
 }
 
-.btn:hover { opacity: 0.88; }
-.btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.btn:hover { opacity: 0.92; transform: translateY(-1px); }
+.btn:active { transform: translateY(0); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
 .btn-secondary {
   background: var(--color-input-bg);
   color: var(--color-input);
+  border: 1px solid var(--color-input-border);
 }
 
 .btn-primary {
-  background: var(--color-ai);
+  background: var(--color-accent-grad);
   color: white;
   width: 100%;
-  margin-top: 1rem;
+  margin-top: var(--space-4);
+  box-shadow: var(--shadow-glow);
+}
+
+.btn-primary:hover {
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.45), 0 0 22px rgba(34, 211, 238, 0.3);
+}
+
+/* "Essensplan erstellen" ist die zentrale Aktion der App und bekommt deshalb eine auffälligere
+   Sonderbehandlung: ein langsam driftender Farbverlauf plus ein Lichtstreifen beim Hover. */
+#erstellen-btn {
+  position: relative;
+  overflow: hidden;
+  background: var(--color-accent-grad-drift);
+  background-size: 300% 300%;
+  animation: btn-primary-drift 8s ease infinite;
+}
+
+#erstellen-btn::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -75%;
+  width: 45%;
+  height: 100%;
+  background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.45), transparent);
+  transform: skewX(-20deg);
+  transition: left 0.6s ease;
+  pointer-events: none;
+}
+
+#erstellen-btn:hover::after { left: 125%; }
+
+@keyframes btn-primary-drift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #erstellen-btn { animation: none; }
+  #erstellen-btn::after { transition: none; }
 }
 
 .status {
   display: block;
-  margin-top: 0.6rem;
-  font-size: 0.85rem;
+  margin-top: var(--space-2);
+  font-size: var(--text-sm);
   color: var(--color-text-muted);
   min-height: 1.2em;
 }
 
-.status.error { color: var(--color-ai); }
+.status.error { color: #fb7185; }
 
 .wochenplan-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 0.9rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
 }
 
 .tag-card {
-  background: var(--color-input-bg);
-  border-radius: 10px;
-  padding: 0.9rem 1rem;
+  /* Feste Breite statt Grid-Spalte: bleibt bei ungerader Kartenanzahl eine Karte allein in der
+     letzten Zeile übrig, behält sie dieselbe Breite wie alle anderen, statt doppelt so breit zu
+     wirken (kein grid-column-Stretching). Der abgezogene Wert ist die Hälfte von .wochenplan-grid
+     gap und muss mit diesem in Sync bleiben. */
+  flex: 0 1 calc(50% - var(--space-2));
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: var(--space-5);
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
-.tag-card h3 {
-  margin: 0 0 0.5rem;
-  font-size: 0.95rem;
-  color: var(--color-input);
+@media (max-width: 560px) {
+  .tag-card { flex-basis: 100%; }
+}
+
+.tag-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--color-border-hover);
+}
+
+.tag-card:focus-visible {
+  outline: none;
+  border-color: var(--color-input);
+  box-shadow: var(--glow-cyan);
+}
+
+.tag-card.aktiv {
+  border-color: rgba(34, 211, 238, 0.35);
+  box-shadow: var(--glow-cyan);
+}
+
+.tag-card .tag-header {
+  display: block;
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--color-text);
 }
 
 .tag-card .temp {
   font-weight: 400;
   color: var(--color-text-muted);
-  font-size: 0.8rem;
+  font-size: var(--text-xs);
 }
 
 .tag-card .tag-datum {
   font-weight: 400;
   color: var(--color-text-muted);
-  font-size: 0.8rem;
+  font-size: var(--text-xs);
 }
 
-.tag-card p { margin: 0.3rem 0; font-size: 0.85rem; }
+.tag-card p { margin: var(--space-1) 0; font-size: var(--text-sm); }
 
-.rezepte-liste { display: flex; flex-direction: column; gap: 0.5rem; }
+/* Tages-Detailansicht: Overlay + zentriertes Modal, geöffnet per Klick auf eine Tageskarte
+   (siehe script.js) - die Wochenübersicht bleibt dabei unverändert im Hintergrund stehen. */
+.tag-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  z-index: 200;
+}
+
+.tag-modal-overlay.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.tag-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -48%);
+  width: min(640px, calc(100vw - var(--space-8)));
+  max-height: min(82vh, 720px);
+  overflow-y: auto;
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow), var(--glow-cyan);
+  padding: var(--space-7) var(--space-6) var(--space-6);
+  z-index: 201;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.tag-modal.visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(-50%, -50%);
+}
+
+.tag-modal-close {
+  position: absolute;
+  top: var(--space-4);
+  right: var(--space-4);
+  background: none;
+  border: none;
+  font-size: var(--text-base);
+  cursor: pointer;
+  color: var(--color-text-muted);
+  padding: var(--icon-btn-padding);
+  border-radius: 6px;
+}
+
+.tag-modal-close:hover { background: var(--icon-btn-hover-bg); color: var(--color-text); }
+
+.tag-modal-titel {
+  margin: 0 0 var(--space-2);
+  padding-right: var(--space-8);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.tag-modal-body .tag-rezepte {
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tag-modal-overlay, .tag-modal { transition: none; }
+}
+
+.tag-rezept .tag-rezept-titel {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-base);
+  color: var(--color-text);
+}
+
+.tag-video-wrapper {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  margin: var(--space-2) 0;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #000;
+}
+
+.tag-video-wrapper .tag-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.tag-video-platzhalter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 16 / 9;
+  margin: var(--space-2) 0;
+  border: 1px dashed var(--color-border);
+  border-radius: 10px;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  background: var(--color-bg-elevated);
+}
+
+.tag-rezept:not(:first-child) {
+  padding-top: var(--space-4);
+  border-top: 1px dashed var(--color-border);
+}
+
+.tag-rezept h5 {
+  margin: var(--space-2) 0 var(--space-1);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.rezepte-liste { display: flex; flex-direction: column; gap: var(--space-2); }
 
 .rezept-item {
-  background: var(--color-ai-bg);
-  border-radius: 10px;
-  padding: 0.7rem 1rem;
-}
-
-.rezept-item summary {
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: var(--space-3) var(--space-4);
   cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.rezept-item:hover { border-color: var(--color-border-hover); }
+
+.rezept-item:focus-visible {
+  outline: none;
+  border-color: var(--color-ai);
+  box-shadow: var(--glow-violet);
+}
+
+.rezept-item.aktiv {
+  border-color: rgba(167, 139, 250, 0.35);
+  box-shadow: var(--glow-violet);
+}
+
+.rezept-item-titel {
+  display: block;
   font-weight: 600;
+  color: var(--color-text);
+}
+
+.rezept-item p,
+.tag-modal-body p { margin: var(--space-2) 0 0; font-size: var(--text-base); }
+
+.rezept-item .rezept-meta,
+.tag-modal-body .rezept-meta { color: var(--color-text-muted); font-size: var(--text-sm); }
+
+.rezept-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  margin: var(--space-2) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rezept-tag {
+  background: var(--color-ai-bg);
   color: var(--color-ai);
+  border-radius: 999px;
+  padding: 2px var(--space-2);
+  font-size: var(--text-xs);
+  font-weight: 500;
 }
 
-.rezept-item .rezept-tag {
-  display: inline-block;
-  font-weight: 400;
-  font-size: 0.75rem;
+.tag-modal-body h4 {
+  margin: var(--space-3) 0 var(--space-1);
+  font-size: var(--text-sm);
+  font-weight: 600;
   color: var(--color-text-muted);
-  background: rgba(0, 0, 0, 0.06);
-  border-radius: 6px;
-  padding: 0.1rem 0.5rem;
-  margin-right: 0.4rem;
 }
 
-.rezept-item p { margin: 0.6rem 0 0; font-size: 0.9rem; }
-
-.rezept-item .rezept-meta { color: var(--color-text-muted); font-size: 0.85rem; }
-
-.rezept-item h4 { margin: 0.7rem 0 0.3rem; font-size: 0.85rem; color: var(--color-ai); }
-
-.rezept-item .rezept-zutaten,
-.rezept-item .rezept-schritte {
+.tag-modal-body .rezept-zutaten,
+.tag-modal-body .rezept-schritte {
   margin: 0;
-  padding-left: 1.2rem;
-  font-size: 0.9rem;
+  padding-left: var(--space-5);
+  font-size: var(--text-base);
 }
 
-.rezept-item .rezept-zutaten li,
-.rezept-item .rezept-schritte li { margin-bottom: 0.25rem; }
+.tag-modal-body .rezept-zutaten li,
+.tag-modal-body .rezept-schritte li { margin-bottom: var(--space-1); }
+
+.tag-modal-body .rezept-naehrwerte {
+  margin: 0;
+  padding-left: 0;
+  font-size: var(--text-base);
+  list-style: none;
+}
+
+.tag-modal-body .rezept-naehrwerte li { margin-bottom: var(--space-1); }
+
+.tag-modal-body .rezept-naehrwerte .naehrwerte-davon {
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
 
 .profil-liste {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  margin-bottom: 1rem;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
 }
 
 .profil-karte {
   position: relative;
-  background: var(--color-input-bg);
-  border-radius: 10px;
-  padding: 1rem 1rem 0.2rem;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: var(--space-4) var(--space-4) var(--space-1);
 }
 
 .profil-entfernen-btn {
   position: absolute;
-  top: 0.6rem;
-  right: 0.6rem;
+  top: var(--space-2);
+  right: var(--space-2);
   background: none;
   border: none;
-  font-size: 1rem;
+  font-size: var(--text-base);
   cursor: pointer;
   color: var(--color-text-muted);
-  padding: 0.2rem 0.4rem;
+  padding: var(--icon-btn-padding);
   border-radius: 6px;
 }
 
-.profil-entfernen-btn:hover { background: rgba(0, 0, 0, 0.06); }
+.profil-entfernen-btn:hover { background: var(--icon-btn-hover-bg); color: var(--color-text); }
 .profil-entfernen-btn:disabled { opacity: 0.35; cursor: not-allowed; }
 
-.feld-gruppe { margin-bottom: 1rem; }
-.feld-gruppe .feld-label { display: block; font-size: 0.9rem; font-weight: 600; margin-bottom: 0.35rem; }
+.feld-gruppe { margin-bottom: var(--space-4); }
+.feld-gruppe .feld-label { display: block; font-size: var(--text-base); font-weight: 600; margin-bottom: var(--space-1); }
 
 .mahlzeiten-zeile {
   display: flex;
-  gap: 1rem;
+  gap: var(--space-4);
   flex-wrap: wrap;
 }
 
 .mahlzeit-checkbox {
   display: flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: var(--space-1);
   font-weight: 400;
-  font-size: 0.9rem;
+  font-size: var(--text-base);
   cursor: pointer;
 }
 
-.mahlzeit-checkbox input[type="checkbox"] {
+.mahlzeit-checkbox input[type="checkbox"],
+.mahlzeiten-tabelle input[type="checkbox"] {
   width: 1.05rem;
   height: 1.05rem;
   cursor: pointer;
   accent-color: var(--color-input);
 }
 
-#profil-hinzufuegen-btn { margin-bottom: 0.75rem; }
+.mahlzeiten-tabelle-wrapper {
+  overflow-x: auto;
+}
+
+.mahlzeiten-tabelle {
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+}
+
+.mahlzeiten-tabelle th,
+.mahlzeiten-tabelle td {
+  padding: var(--space-1) var(--space-2);
+  text-align: center;
+}
+
+.mahlzeiten-tabelle thead th {
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.mahlzeiten-tabelle tbody th {
+  font-weight: 400;
+  text-align: left;
+  white-space: nowrap;
+  padding-right: var(--space-3);
+}
+
+#profil-hinzufuegen-btn { margin-bottom: var(--space-3); }
+
+.einkaufsliste-hinzufuegen {
+  display: grid;
+  grid-template-columns: var(--grid-menge-einheit-name);
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.einkaufsliste-hinzufuegen input { margin-top: 0; }
 
 .einkaufsliste {
   list-style: none;
   margin: 0;
   padding: 0;
   columns: 2;
-  gap: 1rem;
+  gap: var(--space-4);
 }
 
 .einkaufsliste li {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-  padding: 0.4rem 0;
+  gap: var(--space-2);
+  padding: var(--space-2) 0;
   border-bottom: 1px solid var(--color-border);
-  font-size: 0.9rem;
+  font-size: var(--text-base);
   break-inside: avoid;
 }
 
@@ -377,9 +759,165 @@ form input:focus, form select:focus {
   accent-color: var(--color-input);
 }
 
-.einkaufsliste li.abgehakt span {
+.einkaufsliste li.abgehakt .einkaufsliste-text {
   color: var(--color-text-muted);
   text-decoration: line-through;
 }
 
+.einkaufsliste-text { flex: 1; }
+
+.einkaufsliste-icon-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  padding: var(--icon-btn-padding);
+  border-radius: 6px;
+  font-size: var(--text-base);
+  flex-shrink: 0;
+}
+
+.einkaufsliste-icon-btn:hover { background: var(--icon-btn-hover-bg); color: var(--color-text); }
+
+.einkaufsliste li.bearbeiten-modus {
+  column-span: all;
+  display: grid;
+  grid-template-columns: var(--grid-menge-einheit-name) auto;
+  gap: var(--space-2);
+  align-items: center;
+  padding: var(--space-2) 0;
+}
+
+.einkaufsliste li.bearbeiten-modus input { margin-top: 0; }
+
 .empty-hint { color: var(--color-text-muted); font-style: italic; }
+
+.feld-gruppe-zeile {
+  display: flex;
+  gap: var(--space-4);
+}
+
+.feld-gruppe-zeile label { flex: 1; }
+
+.btn-klein {
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-xs);
+}
+
+.eigenes-rezept-zutaten,
+.eigenes-rezept-schritte {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.zutat-zeile {
+  display: grid;
+  grid-template-columns: var(--grid-menge-einheit-name);
+  gap: var(--space-2);
+}
+
+.zutat-zeile input,
+.schritt-zeile input { margin-top: 0; }
+
+.schritt-zeile {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--space-2);
+}
+
+.zeile-entfernen-btn {
+  background: none;
+  border: none;
+  font-size: var(--text-base);
+  cursor: pointer;
+  color: var(--color-text-muted);
+  padding: var(--icon-btn-padding);
+  border-radius: 6px;
+}
+
+.zeile-entfernen-btn:hover { background: var(--icon-btn-hover-bg); color: var(--color-text); }
+
+.tag-modal-body .rezept-aktionen {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+
+/* Startseite: gelegentlich aufpoppende Sprechblasen ("Was essen wir heute?"), positioniert per JS
+   so, dass sie nie Header oder Kachel-Menü überdecken (siehe script.js). Liquid-Glass-Optik: ein
+   verschwommener, halbtransparenter Verlauf über dem Leuchtblasen-Hintergrund statt eines soliden
+   Karten-Hintergrunds wie beim Rest der App. */
+.sprechblasen-layer {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.sprechblase {
+  position: fixed;
+  padding: var(--space-4) var(--space-5);
+  /* Klassische Sprechblasen-Form (abgerundetes Rechteck, eine Ecke bleibt spitzer für den
+     Schwänzchen-Ansatz unten links) - die Eckenradien wabern über sprechblase-welle deutlich
+     sichtbar wie Wasser, ohne die Grundform als Sprechblase zu verlieren. */
+  border-radius: 26px 26px 26px 8px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.05));
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  color: var(--color-text);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  text-align: center;
+  line-height: 1.35;
+  opacity: 0;
+  transform: scale(0.8) translateY(14px);
+  transition: opacity 0.7s cubic-bezier(0.33, 1, 0.68, 1), transform 0.7s cubic-bezier(0.33, 1, 0.68, 1);
+  animation: sprechblase-welle 4.5s ease-in-out infinite;
+}
+
+.sprechblase::after {
+  content: "";
+  position: absolute;
+  bottom: -9px;
+  left: 26px;
+  width: 20px;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.1);
+  border-right: 1px solid rgba(255, 255, 255, 0.22);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 0 0 8px 0;
+  backdrop-filter: blur(18px);
+  transform: rotate(45deg);
+}
+
+.sprechblase.sichtbar {
+  opacity: 1;
+  transform: scale(1) translateY(0);
+}
+
+.sprechblase.verschwindet {
+  opacity: 0;
+  transform: scale(0.88) translateY(-14px);
+}
+
+@keyframes sprechblase-welle {
+  0%, 100% { border-radius: 26px 26px 26px 8px; }
+  25% { border-radius: 38px 16px 30px 8px; }
+  50% { border-radius: 16px 34px 18px 8px; }
+  75% { border-radius: 32px 22px 36px 8px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sprechblase {
+    transition: opacity 0.2s linear;
+    animation: none;
+    border-radius: 26px 26px 26px 8px;
+  }
+  .sprechblase.sichtbar,
+  .sprechblase.verschwindet { transform: none; }
+}

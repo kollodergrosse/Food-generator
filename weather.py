@@ -34,6 +34,8 @@ def _geocode(location: str) -> tuple[float, float]:
 
 
 def _fetch_daily_data(location: str) -> tuple[list[str], list[float]]:
+    """Geocodes the location and fetches the 7-day daily max-temperature forecast for it, returning
+    the raw ISO date strings and temperatures as parallel lists (Open-Meteo's response shape)."""
     lat, lon = _geocode(location)
     resp = requests.get(
         FORECAST_URL,
