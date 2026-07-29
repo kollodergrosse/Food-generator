@@ -61,8 +61,10 @@ local_settings.py
 db.sqlite3
 db.sqlite3-journal
 
-# Essensplan-App: lokale SQLite-Datenbank
+# Essensplan-App: lokale SQLite-Datenbank (essensplan.db selbst wird bewusst committet, siehe unten -
+# nur Backups/sonstige .db-Dateien im data/-Ordner bleiben ignoriert)
 data/*.db
+!data/essensplan.db
 
 # Flask stuff:
 instance/
