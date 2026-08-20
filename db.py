@@ -3,7 +3,7 @@ import json
 from datetime import datetime
 from pathlib import Path
 
-from sqlalchemy import JSON, Column, DateTime, Float, ForeignKey, Integer, String, create_engine, inspect, text
+from sqlalchemy import JSON, Boolean, Column, DateTime, Float, ForeignKey, Integer, String, create_engine, inspect, text
 from sqlalchemy.orm import declarative_base, relationship, sessionmaker
 
 from models import NUTRITION_FIELDS
@@ -69,6 +69,7 @@ class MealPlanORM(Base):
     weekly_plan = Column("wochenplan", JSON, default=dict)
     shopping_list = Column("einkaufsliste", JSON, default=list)
     temperatures = Column("temperaturen", JSON, default=dict)
+    shopping_list_generated = Column("einkaufsliste_erstellt", Boolean, default=False)
 
     recipes = relationship("RecipeORM", back_populates="meal_plan", cascade="all, delete-orphan")
 
@@ -115,6 +116,7 @@ class CustomRecipeORM(NutritionColumnsMixin, Base):
     meal_types = Column("mahlzeiten", JSON, default=list)
     youtube_link = Column("youtube_link", String, default="")
     tags = Column("tags", JSON, default=list)
+    favorite = Column("favorit", Boolean, default=False)
 
 
 def _migrate_profile_table() -> None:
@@ -183,10 +185,12 @@ def init_db() -> None:
             _migrate_profile_table()
     Base.metadata.create_all(engine)
     _ensure_columns("profil", {"praeferenzen": "JSON DEFAULT '[]'"})
+    _ensure_columns("essensplan", {"einkaufsliste_erstellt": "BOOLEAN DEFAULT 0"})
     _ensure_columns("rezept", {**NUTRITION_COLUMNS, "youtube_link": "TEXT DEFAULT ''"})
     _ensure_columns("eigenes_rezept", {
         **NUTRITION_COLUMNS,
         "mahlzeiten": "JSON DEFAULT '[]'",
         "youtube_link": "TEXT DEFAULT ''",
         "tags": "JSON DEFAULT '[]'",
+        "favorit": "BOOLEAN DEFAULT 0",
     })

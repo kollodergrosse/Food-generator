@@ -19,6 +19,8 @@ from storage import (
     save_custom_recipe,
     save_household,
     save_plan,
+    save_shopping_list,
+    set_custom_recipe_favorite,
     set_shopping_list_checked,
     update_shopping_list_item,
 )
@@ -134,6 +136,18 @@ def api_save_custom_recipe():
     return jsonify({"status": "ok", "rezept": recipe.to_dict()})
 
 
+@app.route("/api/eigene-rezepte/<recipe_id>/favorit", methods=["POST"])
+def api_set_custom_recipe_favorite(recipe_id):
+    """Toggles whether a dish counts as a favorite (picked noticeably more often, but still at most
+    once per week, when the weekly plan is created) - a separate endpoint from the full save so a
+    quick star click doesn't trigger a nutrition re-estimate."""
+    data = request.get_json(force=True)
+    recipe = set_custom_recipe_favorite(recipe_id, bool(data.get("favorit", False)))
+    if recipe is None:
+        return jsonify({"status": "fehler", "meldung": "Rezept nicht gefunden."}), 404
+    return jsonify({"status": "ok", "rezept": recipe.to_dict()})
+
+
 @app.route("/api/eigene-rezepte/<recipe_id>", methods=["DELETE"])
 def api_delete_custom_recipe(recipe_id):
     """Deletes a dish from the dish database by id."""
@@ -192,6 +206,23 @@ def api_delete_shopping_list_item(index):
     einkaufsliste = delete_shopping_list_item(index)
     if einkaufsliste is None:
         return jsonify({"status": "fehler", "meldung": "Kein Plan oder ungültige Position."}), 404
+    return jsonify({"status": "ok", "einkaufsliste": [i.to_dict() for i in einkaufsliste]})
+
+
+@app.route("/api/plan/einkaufsliste/erstellen", methods=["POST"])
+def api_generate_shopping_list():
+    """Runs the on-demand AI consolidation over the current plan's shopping list (see
+    AIClient.generate_shopping_list) and persists the result - triggered explicitly by the user via
+    a button instead of automatically on every plan creation, since it's a dedicated AI call with
+    its own latency."""
+    plan = load_plan()
+    if plan is None:
+        return jsonify({"status": "fehler", "meldung": "Es existiert noch kein Essensplan."}), 404
+    try:
+        einkaufsliste = AIClient().generate_shopping_list(plan.shopping_list)
+    except Exception as exc:
+        return jsonify({"status": "fehler", "meldung": str(exc)}), 500
+    einkaufsliste = save_shopping_list(einkaufsliste)
     return jsonify({"status": "ok", "einkaufsliste": [i.to_dict() for i in einkaufsliste]})
 
 

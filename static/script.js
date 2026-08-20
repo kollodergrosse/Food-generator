@@ -91,8 +91,21 @@ function renderTagRezept(mahlzeit, gericht, rezept) {
     : "";
   const zutatenHtml = rezept ? formatiereListe(rezept.zutaten, formatiereZutat) : "";
   const schritteHtml = rezept ? formatiereListe(rezept.zubereitung, (schritt) => schritt) : "";
+  // Der Wochenplan referenziert Gerichte nur über den Namen (die KI wählt aus der
+  // Gerichte-Datenbank aus, siehe ai_client._enforce_favorite_limit) - für den Favoriten-Stern
+  // wird deshalb hier über den Namen auf das zugehörige eigene Rezept zurückgemappt. Ist keins
+  // gefunden (z.B. das Rezept wurde inzwischen aus der Datenbank gelöscht), gibt es keinen Stern.
+  const eigenesRezept = eigeneRezepte.find((r) => r.name === gericht);
+  const favoritBtnHtml = eigenesRezept
+    ? `<button type="button" class="rezept-favorit-btn${eigenesRezept.favorit ? " ist-favorit" : ""}" ` +
+      `data-rezept-id="${eigenesRezept.id}" aria-pressed="${eigenesRezept.favorit ? "true" : "false"}" ` +
+      `aria-label="${eigenesRezept.favorit ? "Favorit entfernen" : "Als Favorit markieren"}">⭐</button>`
+    : "";
   return `<div class="tag-rezept">
-      <h4 class="tag-rezept-titel">${mahlzeit}: ${gericht}</h4>
+      <div class="tag-rezept-kopf">
+        <h4 class="tag-rezept-titel">${mahlzeit}: ${gericht}</h4>
+        ${favoritBtnHtml}
+      </div>
       ${meta ? `<p class="rezept-meta">${meta}</p>` : ""}
       ${zutatenHtml ? `<h5>Zutaten</h5><ul class="rezept-zutaten">${zutatenHtml}</ul>` : ""}
       ${schritteHtml ? `<h5>Zubereitung</h5><ol class="rezept-schritte">${schritteHtml}</ol>` : ""}
@@ -145,6 +158,16 @@ function oeffneTagModal(karte, tag, datum, temperatur, mahlzeitenSort, rezepte) 
       ${mahlzeitenSort.map(([mahlzeit, gericht]) => renderTagRezept(mahlzeit, gericht, (rezepte || {})[gericht])).join("")}
     </div>`;
   zeigeDetailModal(inhalt, karte);
+  detailModalBody.querySelectorAll(".tag-rezept-kopf .rezept-favorit-btn").forEach((btn) => {
+    btn.addEventListener("click", async (e) => {
+      e.stopPropagation();
+      const eigenesRezept = eigeneRezepte.find((r) => String(r.id) === btn.dataset.rezeptId);
+      if (!eigenesRezept) return;
+      await rezeptFavoritUmschalten(eigenesRezept);
+      // Modal mit dem aktualisierten Favoriten-Status neu aufbauen (Sternchen-Anzeige aktualisieren).
+      oeffneTagModal(karte, tag, datum, temperatur, mahlzeitenSort, rezepte);
+    });
+  });
 }
 
 /**
@@ -157,6 +180,7 @@ function renderPlan(plan) {
 
   grid.innerHTML = "";
   schliesseDetailModal();
+  einkaufslisteErstellt = Boolean(plan && plan.einkaufsliste_erstellt);
   renderEinkaufsliste(plan ? plan.einkaufsliste : []);
 
   if (!plan) {
@@ -193,6 +217,12 @@ function renderPlan(plan) {
 
 // --- Einkaufsliste: anzeigen, abhaken, bearbeiten, löschen, frei hinzufügen ---
 let aktuelleEinkaufsliste = [];
+// Ob die aktuelle Liste bereits durch den KI-Zusammenfassen-Aufruf gelaufen ist (siehe
+// AIClient.generate_shopping_list) - false direkt nach dem Erstellen eines Essensplans, wenn sie
+// noch die rohe, nur pro Rezept aufsummierte Liste ist (kann dieselbe Zutat noch mehrfach mit
+// unterschiedlicher Einheit enthalten). Steuert, ob der "Einkaufsliste erstellen"-Button oder der
+// "neu zusammenfassen"-Button angezeigt wird.
+let einkaufslisteErstellt = false;
 
 /** Rendert die Einkaufsliste neu und merkt sie sich in aktuelleEinkaufsliste, damit ein Abbrechen
  * beim Bearbeiten einer Position ohne erneuten Server-Request zur vorherigen Ansicht zurückkann. */
@@ -203,7 +233,43 @@ function renderEinkaufsliste(liste) {
   aktuelleEinkaufsliste.forEach((zutat, index) => {
     einkaufsliste.appendChild(erzeugeEinkaufslistenEintrag(zutat, index));
   });
+  aktualisiereEinkaufslisteErstellenButton();
 }
+
+/** Blendet den "Einkaufsliste erstellen"-Button nur ein, wenn es überhaupt Einträge zum
+ * Zusammenfassen gibt, und beschriftet ihn je nachdem, ob schon einmal zusammengefasst wurde. */
+function aktualisiereEinkaufslisteErstellenButton() {
+  const btn = document.getElementById("einkaufsliste-erstellen-btn");
+  btn.hidden = aktuelleEinkaufsliste.length === 0;
+  btn.textContent = einkaufslisteErstellt ? "🔄 Einkaufsliste neu zusammenfassen" : "🧾 Einkaufsliste erstellen";
+}
+
+// --- Einkaufsliste: per Knopfdruck durch die KI zusammenfassen lassen ---
+document.getElementById("einkaufsliste-erstellen-btn").addEventListener("click", async () => {
+  const btn = document.getElementById("einkaufsliste-erstellen-btn");
+  const status = document.getElementById("einkaufsliste-erstellen-status");
+  btn.disabled = true;
+  status.textContent = "Fasse Einkaufsliste zusammen – das kann einige Sekunden dauern.";
+  status.className = "status";
+  try {
+    const resp = await fetch("/api/plan/einkaufsliste/erstellen", { method: "POST" });
+    const data = await resp.json();
+    if (resp.ok && data.status === "ok") {
+      einkaufslisteErstellt = true;
+      renderEinkaufsliste(data.einkaufsliste);
+      status.textContent = "✓ Einkaufsliste zusammengefasst";
+    } else {
+      status.textContent = "Fehler: " + data.meldung;
+      status.className = "status error";
+    }
+  } catch (err) {
+    status.textContent = "Fehler: " + err.message;
+    status.className = "status error";
+  } finally {
+    btn.disabled = false;
+    setTimeout(() => (status.textContent = ""), 4000);
+  }
+});
 
 /** Baut ein einzelnes <li> der Einkaufsliste: Checkbox zum Abhaken, Text, Bearbeiten- und Löschen-Button. */
 function erzeugeEinkaufslistenEintrag(zutat, index) {
@@ -652,6 +718,26 @@ function eigenesRezeptBearbeiten(rezept) {
 
 eigenesRezeptAbbrechenBtn.addEventListener("click", eigenesRezeptFormZuruecksetzen);
 
+/** Schaltet den Favoriten-Status eines Gerichts um (eigener, leichtgewichtiger Endpunkt statt des
+ * vollen Speichern-Formulars, damit ein Sternklick keine Nährwert-Neuschätzung auslöst) und
+ * rendert die Liste mit dem aktualisierten Gericht neu. */
+async function rezeptFavoritUmschalten(rezept) {
+  try {
+    const resp = await fetch(`/api/eigene-rezepte/${rezept.id}/favorit`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ favorit: !rezept.favorit }),
+    });
+    const data = await resp.json();
+    if (resp.ok && data.status === "ok") {
+      const rest = eigeneRezepte.filter((r) => r.id !== data.rezept.id);
+      renderEigeneRezepte([...rest, data.rezept].sort((a, b) => a.name.localeCompare(b.name, "de")));
+    }
+  } catch (err) {
+    // nicht kritisch fürs Kochen selbst - der Stern bleibt einfach unverändert, ein erneuter Klick geht jederzeit
+  }
+}
+
 // --- Eigene Rezepte: Detailansicht im selben Modal wie der Wochenplan ---
 function oeffneRezeptModal(rezept, karte) {
   const meta = rezept.portionen ? `${rezept.portionen} Portion(en)` : "";
@@ -669,10 +755,15 @@ function oeffneRezeptModal(rezept, karte) {
     formatiereNaehrwerte(rezept.naehrwerte) +
     renderRezeptVideo(rezept.name, rezept.youtube_link) +
     `<div class="rezept-aktionen">
+       <button type="button" class="btn btn-secondary btn-klein" id="modal-rezept-favorit-btn">${rezept.favorit ? "⭐ Favorit" : "☆ Als Favorit markieren"}</button>
        <button type="button" class="btn btn-secondary btn-klein" id="modal-rezept-bearbeiten-btn">Bearbeiten</button>
        <button type="button" class="btn btn-secondary btn-klein" id="modal-rezept-loeschen-btn">Löschen</button>
      </div>`;
   zeigeDetailModal(inhalt, karte);
+  document.getElementById("modal-rezept-favorit-btn").addEventListener("click", async () => {
+    await rezeptFavoritUmschalten(rezept);
+    schliesseDetailModal();
+  });
   document.getElementById("modal-rezept-bearbeiten-btn").addEventListener("click", () => {
     schliesseDetailModal();
     eigenesRezeptBearbeiten(rezept);
@@ -707,9 +798,16 @@ function renderEigeneRezepte(liste) {
     const meta = rezept.portionen ? `${rezept.portionen} Portion(en)` : "";
     const mahlzeitenHtml = (rezept.mahlzeiten || []).join(", ");
     karte.innerHTML =
+      `<button type="button" class="rezept-favorit-btn${rezept.favorit ? " ist-favorit" : ""}" ` +
+      `aria-pressed="${rezept.favorit ? "true" : "false"}" ` +
+      `aria-label="${rezept.favorit ? "Favorit entfernen" : "Als Favorit markieren"}">⭐</button>` +
       `<span class="rezept-item-titel">${rezept.name}</span>` +
       (meta || mahlzeitenHtml ? `<p class="rezept-meta">${meta}${meta && mahlzeitenHtml ? " · " : ""}${mahlzeitenHtml}</p>` : "") +
       formatiereRezeptTags(rezept.tags);
+    karte.querySelector(".rezept-favorit-btn").addEventListener("click", (e) => {
+      e.stopPropagation();
+      rezeptFavoritUmschalten(rezept);
+    });
     const oeffnen = () => oeffneRezeptModal(rezept, karte);
     karte.addEventListener("click", oeffnen);
     karte.addEventListener("keydown", (e) => {
@@ -816,6 +914,27 @@ const SPRECHBLASEN_TEXTE = [
 
 const sprechblasenLayer = document.getElementById("sprechblasen-layer");
 const sprechblasenReduziert = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+let sprechblasenLetzterText = null;
+
+/** Wählt einen Sprechblasen-Text, der weder gerade schon sichtbar ist noch dem zuletzt gezeigten
+ * entspricht - so laufen nie zwei gleiche Blasen gleichzeitig, und aufeinanderfolgende Blasen
+ * unterscheiden sich immer. Bleibt nach Ausschluss keine Option übrig (z.B. bei sehr wenigen
+ * Texten und vielen gleichzeitig sichtbaren Blasen), wird nur der zuletzt gezeigte Text
+ * ausgeschlossen. */
+function waehleSprechblasenText() {
+  const sichtbareTexte = new Set(
+    Array.from(document.querySelectorAll(".sprechblase")).map((el) => el.textContent)
+  );
+  if (sprechblasenLetzterText !== null) sichtbareTexte.add(sprechblasenLetzterText);
+
+  let optionen = SPRECHBLASEN_TEXTE.filter((text) => !sichtbareTexte.has(text));
+  if (optionen.length === 0) {
+    optionen = SPRECHBLASEN_TEXTE.filter((text) => text !== sprechblasenLetzterText);
+  }
+  const text = optionen[Math.floor(Math.random() * optionen.length)];
+  sprechblasenLetzterText = text;
+  return text;
+}
 
 /** Liefert die Bereiche auf der Startseite, in denen keine Sprechblase erscheinen darf: Header und
  * Kachel-Menü (jeweils mit etwas Rand), damit Sprechblasen das Menü nie verdecken, sowie alle
@@ -877,7 +996,7 @@ function zeigeSprechblase() {
   blase.style.left = `${position.x}px`;
   blase.style.top = `${position.y}px`;
   blase.style.maxWidth = `${breite}px`;
-  blase.textContent = SPRECHBLASEN_TEXTE[Math.floor(Math.random() * SPRECHBLASEN_TEXTE.length)];
+  blase.textContent = waehleSprechblasenText();
   sprechblasenLayer.appendChild(blase);
 
   requestAnimationFrame(() => blase.classList.add("sichtbar"));

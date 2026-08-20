@@ -136,6 +136,7 @@ def _custom_recipe_from_row(row) -> CustomRecipe:
         "mahlzeiten": row.meal_types or [],
         "youtube_link": row.youtube_link or "",
         "tags": row.tags or [],
+        "favorit": bool(row.favorite),
     })
 
 
@@ -171,11 +172,24 @@ def save_custom_recipe(recipe: CustomRecipe) -> CustomRecipe:
         row.meal_types = recipe.meal_types
         row.youtube_link = recipe.youtube_link
         row.tags = recipe.tags
+        row.favorite = recipe.favorite
         for attr, value in _nutrition_orm_kwargs(recipe.nutrition).items():
             setattr(row, attr, value)
         session.commit()
 
     return recipe
+
+
+def set_custom_recipe_favorite(recipe_id: str, favorite: bool) -> Optional[CustomRecipe]:
+    """Toggles just the favorite flag of a dish, without touching anything else - kept separate
+    from save_custom_recipe() so a quick star click doesn't trigger a nutrition re-estimate."""
+    with db.SessionLocal() as session:
+        row = session.get(db.CustomRecipeORM, recipe_id)
+        if row is None:
+            return None
+        row.favorite = favorite
+        session.commit()
+        return _custom_recipe_from_row(row)
 
 
 def delete_custom_recipe(recipe_id: str) -> bool:
@@ -301,4 +315,23 @@ def load_plan() -> Optional[MealPlan]:
             },
             "einkaufsliste": plan_row.shopping_list,
             "temperaturen": plan_row.temperatures,
+            "einkaufsliste_erstellt": plan_row.shopping_list_generated,
         })
+
+
+def save_shopping_list(items: List[Ingredient]) -> List[Ingredient]:
+    """Overwrites the current (latest) plan's shopping list with a freshly AI-consolidated one and
+    marks it as generated - called after AIClient.generate_shopping_list(), the on-demand action
+    triggered by the "Einkaufsliste erstellen" button rather than happening automatically on every
+    plan creation."""
+    with db.SessionLocal() as session:
+        plan_row = _latest_plan_row(session)
+        if plan_row is None:
+            plan_row = db.MealPlanORM(weekly_plan={}, shopping_list=[], temperatures={})
+            session.add(plan_row)
+            session.flush()
+
+        plan_row.shopping_list = [i.to_dict() for i in items]
+        plan_row.shopping_list_generated = True
+        session.commit()
+        return items

@@ -260,6 +260,7 @@ class CustomRecipe:
     meal_types: List[str] = field(default_factory=list)  # suitable for which meals
     youtube_link: str = ""
     tags: List[str] = field(default_factory=list)  # free-form characteristics, e.g. "scharf", "mediterran"
+    favorite: bool = False  # picked noticeably more often by the plan AI, but still max once/week
 
     def to_dict(self) -> Dict[str, Any]:
         """Serializes the dish to the German-keyed JSON shape used by the API and frontend."""
@@ -273,6 +274,7 @@ class CustomRecipe:
             "mahlzeiten": self.meal_types,
             "youtube_link": self.youtube_link,
             "tags": self.tags,
+            "favorit": self.favorite,
         }
 
     @classmethod
@@ -288,6 +290,7 @@ class CustomRecipe:
             meal_types=data.get("mahlzeiten") or [],
             youtube_link=data.get("youtube_link", ""),
             tags=data.get("tags") or [],
+            favorite=bool(data.get("favorit", False)),
         )
 
 
@@ -298,6 +301,11 @@ class MealPlan:
     recipes: Dict[str, Recipe]              # dish name -> recipe
     shopping_list: List[Ingredient]
     temperatures: Dict[str, float] = field(default_factory=dict)  # weekday -> max temperature (°C)
+    # Whether the shopping list was already run through the on-demand AI consolidation (see
+    # AIClient.generate_shopping_list) - false right after plan creation, when it's still just the
+    # raw, per-recipe aggregated list. Drives whether the frontend shows the "Einkaufsliste
+    # erstellen" button or the list itself.
+    shopping_list_generated: bool = False
 
     def to_dict(self) -> Dict[str, Any]:
         """Serializes the plan, including all its recipes and the shopping list, to the
@@ -307,6 +315,7 @@ class MealPlan:
             "rezepte": {name: recipe.to_dict() for name, recipe in self.recipes.items()},
             "einkaufsliste": [i.to_dict() for i in self.shopping_list],
             "temperaturen": self.temperatures,
+            "einkaufsliste_erstellt": self.shopping_list_generated,
         }
 
     @classmethod
@@ -321,4 +330,5 @@ class MealPlan:
             },
             shopping_list=[Ingredient.from_dict(i) for i in data.get("einkaufsliste", [])],
             temperatures=data.get("temperaturen", {}),
+            shopping_list_generated=bool(data.get("einkaufsliste_erstellt", False)),
         )
